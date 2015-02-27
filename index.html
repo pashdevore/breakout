@@ -10,82 +10,50 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="js/breakout.js"></script>
     <script>
-      var canvasMinX;
-      var canvasMaxX;
-      var bricks;
-      var rows;
-      var cols;
-      var brickWidth;
-      var brickHeight;
-      var padding;
-
-      function init_bricks() {
-        rows = 5;
-        cols = 5;
-        brickWidth = (width/cols) - 1;
-        brickHeight = 15;
-        padding = 1;
-
-        bricks = new Array(rows);
-        for (i=0; i < rows; i++) {
-          bricks[i] = new Array(cols);
-          for (j=0; j < cols; j++) {
-            bricks[i][j] = 1;
-          }
-        }
-      }
-
-      function init_mouse() {
-        canvasMinX = $("#canvas").offset().left;
-        canvasMaxX = canvasMinX + width;
-      }
-
-      function onMouseMove(evt) {
-        if (evt.pageX > canvasMinX && evt.pageX < canvasMaxX) {
-          paddlex = evt.pageX - canvasMinX - paddlew/2;
-        }
-      }
-
-      $(document).mousemove(onMouseMove);
+      var ballr = 10;
+      var rowcolors = ["#FF1C0A", "#FFFD0A", "#00A308", "#0008DB", "#EB0093"];
+      var paddlecolor = "#FFFFFF";
+      var ballcolor = "#FFFFFF";
+      var backcolor = "#000000";
 
       function draw() {
+        ctx.fillStyle = backcolor;
         clear();
-        circle(x, y, 10);
+        ctx.fillStyle = ballcolor;
+        circle(x, y, ballr);
 
+        if (rightDown) paddlex += 5;
+        else if (leftDown) paddlex -= 5;
+
+        ctx.fillStyle = paddlecolor;
         rect(paddlex, height-paddleh, paddlew, paddleh);
 
-        //draw bricks
-        for (i=0; i < rows; i++) {
-          for (j=0; j < cols; j++) {
-            if (bricks[i][j] == 1) {
-              rect((j * (brickWidth + padding)) + padding,
-                   (i * (brickHeight + padding)) + padding,
-                   brickWidth, brickHeight);
-            }
-          }
-        }
+        drawbricks();
 
-        //have we hit a brick?
         rowheight = brickHeight + padding;
         colwidth = brickWidth + padding;
         row = Math.floor(y/rowheight);
         col = Math.floor(x/colwidth);
-        //if so, reverse the ball and mark the brick as broken
+        //reverse the ball and mark the brick as broken
         if (y < rows * rowheight && row >= 0 && col >= 0 && bricks[row][col] == 1) {
           dy = -dy;
           bricks[row][col] = 0;
         }
 
-        if (x + dx > width || x + dx < 0)
+        if (x + dx + ballr > width || x + dx - ballr < 0)
           dx = -dx;
 
-        if (y + dy < 0)
+        if (y + dy - ballr < 0)
           dy = -dy;
-        else if (y + dy > height) {
-          if (x > paddlex && x < paddlex + paddlew)
+        else if (y + dy + ballr > height - paddleh) {
+          if (x > paddlex && x < paddlex + paddlew) {
+            //move the ball differently based on where it hit the paddle
+            dx = 8 * ((x-(paddlex+paddlew/2))/paddlew);
             dy = -dy;
-          else
+          }
+          else if (y + dy + ballr > height){
             clearInterval(intervalId);
+          }
         }
 
         x += dx;
@@ -93,8 +61,7 @@
       }
 
       init();
-      init_mouse();
-      init_bricks();
+      initbricks();
     </script>
   </body>
 </html>
